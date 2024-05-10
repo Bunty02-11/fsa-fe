@@ -18,8 +18,9 @@ import Calendar from "./scenes/calendar/calendar";
 import Login from "./scenes/login";
 import { baseurl } from "../src/api";
 import axios from "axios";
-import { ToastContainer ,toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Loader from "react-js-loader";
 
 function App() {
 
@@ -32,6 +33,7 @@ function App() {
   const [phone, setPhone] = useState('');
   const [organization, setOrganization] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (email, password) => {
     const requestData = {
@@ -40,19 +42,24 @@ function App() {
     };
 
     try {
+      setLoading(true);
       const response = await axios.post(`${baseurl}/api/auth/login`, requestData);
-      const token = response.data.token;
-      toast.success('Successfully Logged');
+      // console.log(response)
 
-      localStorage.setItem('token', token);
+      if (response.status === 200) {
+        const token = response.token.token;
+        localStorage.setItem('token', token);
+        setIsLoggedIn(true)
+        navigate('/dashboard');
+        toast.success('Registered Successfully');
+        return;
+      }
 
-      setEmail('');
-      setPassword('');
-      setIsLoggedIn(true)
-      navigate('/dashboard');
     } catch (error) {
       console.error('Error:', error);
       toast.error('Wrong Credentials');
+    } finally {
+      setLoading(false); // Set loading to false when login process finishes
     }
   }
 
@@ -76,6 +83,8 @@ function App() {
     } catch (error) {
       console.error('Error:', error);
       toast.error('Registration Failed');
+    } finally {
+      setLoading(false); // Set loading to false when login process finishes
     }
   }
 
@@ -89,37 +98,49 @@ function App() {
         <CssBaseline />
         <ToastContainer />
         <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
+        {loading && <Loader type="box-rectangular" bgColor={"green"} color={"red"} title={"box-rectangular"} size={100} />}
+        {/* {!isLoggedIn ? (
+          <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
+        ) : (
+        
+        ) */}
       </ThemeProvider>
     );
   }
 
   return (
     <>
+
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <ToastContainer />
-          <div className="app">
-            <Sidebar isSidebar={isSidebar} />
-            <main className="content">
-              <Topbar setIsSidebar={setIsSidebar} />
-              <Routes>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/team" element={<Team />} />
-                <Route path="/contacts" element={<Contacts />} />
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/form" element={<Form />} />
-                <Route path="/bar" element={<Bar />} />
-                <Route path="/pie" element={<Pie />} />
-                <Route path="/line" element={<Line />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/geography" element={<Geography />} />
-              </Routes>
-            </main>
-          </div>
+          {!isLoggedIn ? (
+            <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
+          ) : (
+            <div className="app">
+              <Sidebar isSidebar={isSidebar} />
+              <main className="content">
+                <Topbar setIsSidebar={setIsSidebar} />
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/team" element={<Team />} />
+                  <Route path="/contacts" element={<Contacts />} />
+                  <Route path="/invoices" element={<Invoices />} />
+                  <Route path="/form" element={<Form />} />
+                  <Route path="/bar" element={<Bar />} />
+                  <Route path="/pie" element={<Pie />} />
+                  <Route path="/line" element={<Line />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/calendar" element={<Calendar />} />
+                  <Route path="/geography" element={<Geography />} />
+                </Routes>
+              </main>
+            </div>
+          )}
         </ThemeProvider>
       </ColorModeContext.Provider>
+
     </>
   );
 }

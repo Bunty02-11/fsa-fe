@@ -48,7 +48,6 @@ function Login({ handleLogin, handleRegistration }) {
     } else {
       handleRegistration(email, phone, organization, password );
     }
-    navigate('/dashboard');
   };
 
   return (
