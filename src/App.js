@@ -30,7 +30,10 @@ function App() {
   const [isSidebar, setIsSidebar] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [password, setPassword] = useState('');
   const handleLogin = async (email, password) => {
     setLoading(true);
     try {
@@ -53,6 +56,8 @@ function App() {
   const handleRegistration = async (email, phone, organization, password) => {
     // console.log(email, phone, organization, password, 'requestdata')
     const body = { email, phone, organization, password }
+    setLoading(true); // Set loading to true when registration process starts
+
     // console.log(body)
     try {
       const response = await axios.post(`${baseurl}/api/auth/register`, body);
@@ -61,10 +66,10 @@ function App() {
 
       // localStorage.setItem('token', token);
 
-      // setEmail('');
-      // setPhone('');
-      // setOrganization('');
-      // setPassword('');
+      setEmail('');
+      setPhone('');
+      setOrganization('');
+      setPassword('');
       // setIsLoggedIn(true);
       // navigate('/dashboard');
     } catch (error) {
@@ -85,7 +90,7 @@ function App() {
               <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
               {loading && (
                 <div className="loader-container">
-                  <Loader type="box-rectangular" bgColor={"#FFFFFF"} color={'#000000'} title={"box-rectangular"} size={100} />
+                  <Loader type="box-rectangular" bgColor={"#43ce9e"} color={'#FFFFFF'} title={"Loading"} size={100} />
                 </div>
               )}
             </>
