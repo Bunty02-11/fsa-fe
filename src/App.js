@@ -29,39 +29,26 @@ function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [organization, setOrganization] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (email, password) => {
-    const requestData = {
-      email: email,
-      password: password,
-    };
-
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await axios.post(`${baseurl}/api/auth/login`, requestData);
-      // console.log(response)
-
-      if (response.status === 200) {
-        const token = response.token.token;
-        localStorage.setItem('token', token);
-        setIsLoggedIn(true)
-        navigate('/dashboard');
-        toast.success('Registered Successfully');
-        return;
-      }
-
+      const response = await axios.post(`${baseurl}/api/auth/login`, { email, password });
+      const token = response.data.token.token;
+      localStorage.setItem("token", token);
+      setIsLoggedIn(true);
+      navigate("/dashboard");
+      toast.success("Logged in successfully");
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Wrong Credentials');
+      console.error("Error:", error);
+      toast.error("Invalid credentials");
     } finally {
-      setLoading(false); // Set loading to false when login process finishes
+      setLoading(false);
     }
-  }
+  };
+
+
 
   const handleRegistration = async (email, phone, organization, password) => {
     // console.log(email, phone, organization, password, 'requestdata')
@@ -87,36 +74,21 @@ function App() {
       setLoading(false); // Set loading to false when login process finishes
     }
   }
-
-
-
-  if (!isLoggedIn) {
-    console.log('cliked')
-    return (
-
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <ToastContainer />
-        <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
-        {loading && <Loader type="box-rectangular" bgColor={"green"} color={"red"} title={"box-rectangular"} size={100} />}
-        {/* {!isLoggedIn ? (
-          <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
-        ) : (
-        
-        ) */}
-      </ThemeProvider>
-    );
-  }
-
   return (
     <>
-
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <ToastContainer />
           {!isLoggedIn ? (
-            <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
+            <>
+              <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
+              {loading && (
+                <div className="loader-container">
+                  <Loader type="box-rectangular" bgColor={"#FFFFFF"} color={'#000000'} title={"box-rectangular"} size={100} />
+                </div>
+              )}
+            </>
           ) : (
             <div className="app">
               <Sidebar isSidebar={isSidebar} />

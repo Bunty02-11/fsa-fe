@@ -33,3 +33,11 @@ body,
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+.loader-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999; /* Ensure loader is on top of other content */
+}
