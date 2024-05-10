@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { TextField, Button, Grid, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-function Login({ handleLogin, handleRegister }) {
+
+function Login({ handleLogin, handleRegistration }) {
 
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('login');
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [organization, setOrganization] = useState('');
@@ -44,10 +44,11 @@ function Login({ handleLogin, handleRegister }) {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (activeTab === 'login') {
-      handleLogin(username, password);
+      handleLogin(email, password);
     } else {
-      handleRegister({ username, email, phone, organization, password });
+      handleRegistration(email, phone, organization, password );
     }
+    navigate('/dashboard');
   };
 
   return (
@@ -66,10 +67,9 @@ function Login({ handleLogin, handleRegister }) {
           <form onSubmit={handleFormSubmit}>
             {(activeTab === 'login' || activeTab === 'register') && (
               <>
-                <TextField type="text" label="Username" style={inputStyle} value={username} onChange={(e) => setUsername(e.target.value)} required />
+                <TextField type="email" label="Email" style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)} required />
                 {activeTab === 'register' && (
                   <>
-                    <TextField type="email" label="Email" style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)} required />
                     <TextField type="tel" label="Phone" style={inputStyle} value={phone} onChange={(e) => setPhone(e.target.value)} required />
                     <TextField type="text" label="Organization" style={inputStyle} value={organization} onChange={(e) => setOrganization(e.target.value)} required />
                   </>
