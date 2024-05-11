@@ -51,8 +51,6 @@ function App() {
     }
   };
 
-
-
   const handleRegistration = async (email, phone, organization, password) => {
     // console.log(email, phone, organization, password, 'requestdata')
     const body = { email, phone, organization, password }
@@ -61,11 +59,8 @@ function App() {
     // console.log(body)
     try {
       const response = await axios.post(`${baseurl}/api/auth/register`, body);
-
       toast.success('Registered Successfully');
-
       // localStorage.setItem('token', token);
-
       setEmail('');
       setPhone('');
       setOrganization('');
@@ -79,6 +74,8 @@ function App() {
       setLoading(false); // Set loading to false when login process finishes
     }
   }
+
+
   return (
     <>
       <ColorModeContext.Provider value={colorMode}>
