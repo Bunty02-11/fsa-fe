@@ -7,15 +7,17 @@ import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useEffect ,useState } from "react";
+import { useEffect, useState } from "react";
+
 
 const Form = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [schemes, setSchemes] = useState([]);
-
-  const handleFormSubmit = async(values) => {
+  const [loading, setLoading] = useState(false);
+  const handleFormSubmit = async (values, { resetForm }) => {
+    setLoading(true)
     let success = false;
     let retryCount = 0;
     const token = localStorage.getItem('token'); // Assuming your token is stored in localStorage under the key 'token'
@@ -33,15 +35,16 @@ const Form = () => {
             schemeType: values.type,
           }),
         });
-    
+
         if (!response.ok) {
           throw new Error('Failed to create scheme');
         }
-    
+
         const data = await response.json();
         // console.log('Scheme created successfully:', data);
         success = true; // Set success to true to break out of the loop
         toast.success('Scheme created successfully'); // 
+        resetForm();
       } catch (error) {
 
         // console.error('Error creating scheme:', error.message);
@@ -50,6 +53,8 @@ const Form = () => {
         toast.error('Failed to create scheme');  // Wait for 1 second before retrying
       }
     }
+    setLoading(false);
+
   };
 
   const columns = [
@@ -103,6 +108,7 @@ const Form = () => {
     <Box m={isMobile ? "10px" : "20px"}>
       <Header title="CREATE SCHEME" subtitle="Create a New Scheme" />
       <ToastContainer position="bottom-right" autoClose={5000} />
+      {/*  */}
       <Formik
         onSubmit={handleFormSubmit}
         initialValues={initialValues}
@@ -120,7 +126,9 @@ const Form = () => {
             <Box
               display="grid"
               gap="30px"
-              gridTemplateColumns={isMobile ? "repeat(4, minmax(0, 1fr))" : "1fr"}
+              gridTemplateColumns={
+                isMobile ? "repeat(4, minmax(0, 1fr))" : "1fr"
+              }
             >
               <TextField
                 fullWidth
@@ -150,14 +158,21 @@ const Form = () => {
               />
             </Box>
             <Box display="flex" justifyContent="center" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
-                Create New Scheme
+              <Button
+                type="submit"
+                color="secondary"
+                variant="contained"
+                disabled={loading} // Disable button while loading
+              >
+                {loading ? "Creating..." : "Create New Scheme"}
               </Button>
             </Box>
           </form>
         )}
       </Formik>
 
+
+      {/*  */}
       <Box m="20px">
         <Header title="SCHEMES" subtitle="List of Schemes" />
         <Box
@@ -195,9 +210,6 @@ const Form = () => {
     </Box>
   );
 };
-
-const phoneRegExp =
-  /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
 
 const checkoutSchema = yup.object().shape({
   scheme: yup.string().required("required"),

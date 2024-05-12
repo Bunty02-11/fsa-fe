@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
@@ -23,7 +23,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import Loader from "react-js-loader";
 
 function App() {
-
   const navigate = useNavigate();
 
   const [theme, colorMode] = useMode();
@@ -34,6 +33,14 @@ function App() {
   const [phone, setPhone] = useState('');
   const [organization, setOrganization] = useState('');
   const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   const handleLogin = async (email, password) => {
     setLoading(true);
     try {
@@ -41,7 +48,7 @@ function App() {
       const token = response.data.token.token;
       localStorage.setItem("token", token);
       setIsLoggedIn(true);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
       toast.success("Logged in successfully");
     } catch (error) {
       console.error("Error:", error);
@@ -52,29 +59,28 @@ function App() {
   };
 
   const handleRegistration = async (email, phone, organization, password) => {
-    // console.log(email, phone, organization, password, 'requestdata')
-    const body = { email, phone, organization, password }
-    setLoading(true); // Set loading to true when registration process starts
-
-    // console.log(body)
+    const body = { email, phone, organization, password };
+    setLoading(true);
     try {
       const response = await axios.post(`${baseurl}/api/auth/register`, body);
       toast.success('Registered Successfully');
-      // localStorage.setItem('token', token);
       setEmail('');
       setPhone('');
       setOrganization('');
       setPassword('');
-      // setIsLoggedIn(true);
-      // navigate('/dashboard');
     } catch (error) {
       console.error('Error:', error);
       toast.error('Registration Failed');
     } finally {
-      setLoading(false); // Set loading to false when login process finishes
+      setLoading(false);
     }
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    navigate("/login", { replace: true });
+  };
 
   return (
     <>
@@ -95,7 +101,7 @@ function App() {
             <div className="app">
               <Sidebar isSidebar={isSidebar} />
               <main className="content">
-                <Topbar setIsSidebar={setIsSidebar} />
+                <Topbar setIsSidebar={setIsSidebar} handleLogout={handleLogout} />
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/team" element={<Team />} />
@@ -114,7 +120,6 @@ function App() {
           )}
         </ThemeProvider>
       </ColorModeContext.Provider>
-
     </>
   );
 }
