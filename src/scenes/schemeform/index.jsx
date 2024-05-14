@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Typography, useTheme } from "@mui/material";
+import { Box, Button, TextField, useTheme } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -16,13 +16,18 @@ const Form = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [schemes, setSchemes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [schemeName, setSchemeName] = useState('')
+  const [schemeType, setSchemeType] = useState('')
+
+
   const handleFormSubmit = async (values, { resetForm }) => {
-    setLoading(true)
+    setLoading(true);
     let success = false;
     let retryCount = 0;
-    const token = localStorage.getItem('token'); // Assuming your token is stored in localStorage under the key 'token'
+    const token = localStorage.getItem('token');
 
-    while (!success && retryCount < 3) { // Retry logic added with a maximum of 3 retries
+    while (!success && retryCount < 3) {
       try {
         const response = await fetch('https://ykbog3ly9j.execute-api.ap-south-1.amazonaws.com/production/api/schemes', {
           method: 'POST',
@@ -36,26 +41,103 @@ const Form = () => {
           }),
         });
 
+        if (response.statusCode === 409) {
+          throw new Error('Scheme already exists');
+        }
+
         if (!response.ok) {
           throw new Error('Failed to create scheme');
         }
 
         const data = await response.json();
-        // console.log('Scheme created successfully:', data);
-        success = true; // Set success to true to break out of the loop
-        toast.success('Scheme created successfully'); // 
+        console.log('Scheme created successfully:', data);
+
+        setSchemes([...schemes, data.data]);
+
+        success = true;
+        toast.success('Scheme created successfully');
         resetForm();
       } catch (error) {
-
-        // console.error('Error creating scheme:', error.message);
-        retryCount++; // Increment the retry count on each failure
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        toast.error('Failed to create scheme');  // Wait for 1 second before retrying
+        console.error('Error creating scheme:', error.message);
+        retryCount++;
+        if (error.message === 'Scheme already exists') {
+          toast.warning('Scheme already exists');
+          break; // No need to retry if the scheme already exists
+        } else {
+          toast.error('Failed to create scheme');
+        }
       }
     }
     setLoading(false);
-
   };
+
+  const handleEdit = async (row) => {
+    setLoading(true);
+    setEditData(row);
+    setSchemeName(row.schemeName);
+    setSchemeType(row.schemeType);
+    console.log(row)
+    setLoading(false);
+  };
+
+  const handleUpdateForm = async (values, { resetForm }) => {
+    // Implement logic to update scheme data based on editData and values
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://ykbog3ly9j.execute-api.ap-south-1.amazonaws.com/production/api/schemes/${editData.id}`, {
+        method: 'PUT', // Update method for editing
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `${token}`,
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update scheme');
+      }
+
+      const updatedScheme = await response.json();
+      const updatedSchemes = schemes.map((scheme) => (scheme.id === editData.id ? updatedScheme.data : scheme));
+      setSchemes(updatedSchemes);
+      setEditData(null); // Clear edit data after successful update
+      resetForm();
+      toast.success('Scheme updated successfully');
+    } catch (error) {
+      console.error('Error updating scheme:', error.message);
+      toast.error('Failed to update scheme');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm("Are you sure you want to delete this scheme?");
+    if (confirmed) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://ykbog3ly9j.execute-api.ap-south-1.amazonaws.com/production/api/schemes/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete scheme');
+        }
+
+        const updatedSchemes = schemes.filter((scheme) => scheme.id !== id);
+        setSchemes(updatedSchemes);
+        toast.success('Scheme deleted successfully');
+      } catch (error) {
+        console.error('Error deleting scheme:', error.message);
+        toast.error('Failed to delete scheme');
+      }
+    }
+  };
+
 
   const columns = [
     { field: "id", headerName: "ID" },
@@ -69,6 +151,33 @@ const Form = () => {
       field: "schemeType",
       headerName: "Scheme Type",
       flex: 1,
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 150, // Adjusted width to accommodate two buttons
+      renderCell: (params) => (
+        // console.log(params)
+        <>
+          <Button
+            variant="contained"
+            size="small"
+            color="primary"
+            onClick={() => handleEdit(params.row)}
+            disabled={!!editData} // Disable edit button while editing another scheme
+          >
+            Edit
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            color="error"
+            onClick={() => handleDelete(params.row.id)}
+          >
+            Delete
+          </Button>
+        </>
+      ),
     },
   ];
 
@@ -110,8 +219,8 @@ const Form = () => {
       <ToastContainer position="bottom-right" autoClose={5000} />
       {/*  */}
       <Formik
-        onSubmit={handleFormSubmit}
-        initialValues={initialValues}
+        onSubmit={editData ? handleUpdateForm : handleFormSubmit}
+        initialValues={{ scheme: editData ? editData.schemeName : "", type: editData ? editData.schemeType : "" }}
         validationSchema={checkoutSchema}
       >
         {({
@@ -134,27 +243,25 @@ const Form = () => {
                 fullWidth
                 variant="filled"
                 type="text"
-                label="Scheme-Name"
+                label="Scheme Name"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.scheme}
                 name="scheme"
                 error={!!touched.scheme && !!errors.scheme}
                 helperText={touched.scheme && errors.scheme}
-                sx={{ gridColumn: isMobile ? "span 4" : "auto" }}
               />
               <TextField
                 fullWidth
                 variant="filled"
                 type="text"
-                label="Type Of Scheme"
+                label="Scheme Type"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.type}
                 name="type"
                 error={!!touched.type && !!errors.type}
                 helperText={touched.type && errors.type}
-                sx={{ gridColumn: isMobile ? "span 4" : "auto" }}
               />
             </Box>
             <Box display="flex" justifyContent="center" mt="20px">
@@ -164,7 +271,7 @@ const Form = () => {
                 variant="contained"
                 disabled={loading} // Disable button while loading
               >
-                {loading ? "Creating..." : "Create New Scheme"}
+                {editData ? "Edit Scheme" : (loading ? "Creating..." : "Create New Scheme")}
               </Button>
             </Box>
           </form>
@@ -204,7 +311,8 @@ const Form = () => {
             },
           }}
         >
-          <DataGrid checkboxSelection rows={schemes} columns={columns} />
+          <DataGrid checkboxSelection rows={schemes ? schemes : []} columns={columns} />
+
         </Box>
       </Box>
     </Box>

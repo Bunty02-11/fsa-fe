@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { TextField, Button, Grid, Paper } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 
 
 function Login({ handleLogin, handleRegistration }) {
 
-  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('login');
   const [email, setEmail] = useState('');

@@ -33,12 +33,18 @@ function App() {
   const [phone, setPhone] = useState('');
   const [organization, setOrganization] = useState('');
   const [password, setPassword] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
+
+  const checkLoginStatus = () => {
     const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-    }
+    setIsLoggedIn(!!token); // Set isLoggedIn based on token presence (truthy or falsy)
+    setIsAuthenticated(!!token);
+  }
+
+  // Call checkLoginStatus on component mount to handle initial state
+  useEffect(() => {
+    checkLoginStatus();
   }, []);
 
   const handleLogin = async (email, password) => {
