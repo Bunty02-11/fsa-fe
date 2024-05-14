@@ -1,5 +1,5 @@
 import { Box, Button, TextField, useTheme } from "@mui/material";
-import { Formik } from "formik";
+import { Formik, useFormikContext } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
@@ -8,7 +8,7 @@ import { tokens } from "../../theme";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useEffect, useState } from "react";
-
+import axios from "axios";
 
 const Form = () => {
   const theme = useTheme();
@@ -19,7 +19,8 @@ const Form = () => {
   const [editData, setEditData] = useState(null);
   const [schemeName, setSchemeName] = useState('')
   const [schemeType, setSchemeType] = useState('')
-
+  // const [values,setValues] = useState('')
+  // const { setValues } = useFormikContext(); // Get setValues function from Formik context
 
   const handleFormSubmit = async (values, { resetForm }) => {
     setLoading(true);
@@ -71,38 +72,67 @@ const Form = () => {
     setLoading(false);
   };
 
-  const handleEdit = async (row) => {
-    setLoading(true);
-    setEditData(row);
-    setSchemeName(row.schemeName);
-    setSchemeType(row.schemeType);
-    console.log(row)
-    setLoading(false);
-  };
+  const handleEdit = async (row, setValues) => {
+    // console.log(row)
+    try {
+      setEditData(row);
+      setSchemeName(row.schemeName);
+      setSchemeType(row.schemeType);
+      setValues({
+        scheme: row.schemeName,
+        type: row.schemeType,
+        id: row.id,
+      });
 
-  const handleUpdateForm = async (values, { resetForm }) => {
+
+    } catch (error) {
+      console.error('Error setting edit data:', error.message);
+    } finally {
+      setLoading(false);
+    }
+
+  };
+  // console.log(editData)
+
+  const handleUpdateForm = async (values, { reseForm }) => {
+    console.log(values, 'da')
     // Implement logic to update scheme data based on editData and values
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://ykbog3ly9j.execute-api.ap-south-1.amazonaws.com/production/api/schemes/${editData.id}`, {
-        method: 'PUT', // Update method for editing
+      const body = {
+        schemeName: values.scheme,
+        schemeType: values.type
+      }
+      console.log(body)
+      const response = await axios.put(`https://ykbog3ly9j.execute-api.ap-south-1.amazonaws.com/production/api/schemes/${values.id}`, body, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `${token}`,
         },
-        body: JSON.stringify(values),
-      });
+      })
+      console.log(response, 'res')
+      // resetForm();
+      // const response = await fetch(`https://ykbog3ly9j.execute-api.ap-south-1.amazonaws.com/production/api/schemes/${values.id}`, {
+      //   method: 'PUT', // Update method for editing
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `${token}`,
+      //   },
+      //   body: JSON.stringify(values),
+      // });
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error('Failed to update scheme');
       }
 
-      const updatedScheme = await response.json();
-      const updatedSchemes = schemes.map((scheme) => (scheme.id === editData.id ? updatedScheme.data : scheme));
+
+      const updatedScheme = response.data;
+      // console.log(updatedScheme)
+      const updatedSchemes = schemes.map((scheme) => (scheme.id === editData.id ? updatedScheme : scheme));
+      
       setSchemes(updatedSchemes);
       setEditData(null); // Clear edit data after successful update
-      resetForm();
+      // resetForm();
       toast.success('Scheme updated successfully');
     } catch (error) {
       console.error('Error updating scheme:', error.message);
@@ -220,9 +250,15 @@ const Form = () => {
       {/*  */}
       <Formik
         onSubmit={editData ? handleUpdateForm : handleFormSubmit}
-        initialValues={{ scheme: editData ? editData.schemeName : "", type: editData ? editData.schemeType : "" }}
+        initialValues={{
+          scheme: editData ? editData.schemeName : "",
+          type: editData ? editData.schemeType : "",
+          id: editData ? editData.id : null,
+        }}
         validationSchema={checkoutSchema}
+        enableReinitialize // This allows initialValues to be updated when editData changes
       >
+
         {({
           values,
           errors,
@@ -230,6 +266,7 @@ const Form = () => {
           handleBlur,
           handleChange,
           handleSubmit,
+          loading,
         }) => (
           <form onSubmit={handleSubmit}>
             <Box
@@ -271,7 +308,7 @@ const Form = () => {
                 variant="contained"
                 disabled={loading} // Disable button while loading
               >
-                {editData ? "Edit Scheme" : (loading ? "Creating..." : "Create New Scheme")}
+                {editData ? "Update Scheme" : (loading ? "Creating..." : "Create New Scheme")}
               </Button>
             </Box>
           </form>
