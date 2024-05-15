@@ -146,7 +146,7 @@ const Sidebar = () => {
             </Typography>
             <Item
               title="User Management"
-              to="/team"
+              to="/user"
               icon={<PeopleOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
@@ -158,13 +158,13 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-            <Item
+            {/* <Item
               title="Invoices Balances"
               to="/invoices"
               icon={<ReceiptOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
-            />
+            /> */}
 
             <Typography
               variant="h6"
@@ -175,7 +175,7 @@ const Sidebar = () => {
             </Typography>
             <Item
               title="Scheme Form"
-              to="/form"
+              to="/scheme-form"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}

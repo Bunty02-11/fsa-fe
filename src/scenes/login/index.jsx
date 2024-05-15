@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { TextField, Button, Grid, Paper } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, register } from '../../actions/authAction';
 
-
-function Login({ handleLogin, handleRegistration }) {
-
+function Login() {
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState('login');
   const [email, setEmail] = useState('');
@@ -42,9 +44,9 @@ function Login({ handleLogin, handleRegistration }) {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (activeTab === 'login') {
-      handleLogin(email, password);
+      dispatch(login({ email, password }));
     } else {
-      handleRegistration(email, phone, organization, password );
+      dispatch(register({ email, phone, organization, password }));
     }
   };
 

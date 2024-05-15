@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
@@ -16,77 +17,31 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 import Calendar from "./scenes/calendar/calendar";
 import Login from "./scenes/login";
-import { baseurl } from "../src/api";
-import axios from "axios";
-import { ToastContainer, toast } from 'react-toastify';
+import { logout } from "../src/actions/authAction";
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from "react-js-loader";
 
 function App() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { loading, isAuthenticated } = useSelector((state) => state.auth);
 
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [organization, setOrganization] = useState('');
-  const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token); // Set isLoggedIn based on token presence (truthy or falsy)
-    setIsAuthenticated(!!token);
-  }
-
-  // Call checkLoginStatus on component mount to handle initial state
-  useEffect(() => {
-    checkLoginStatus();
-  }, []);
-
-  const handleLogin = async (email, password) => {
-    setLoading(true);
-    try {
-      const response = await axios.post(`${baseurl}/api/auth/login`, { email, password });
-      const token = response.data.token.token;
-      localStorage.setItem("token", token);
-      setIsLoggedIn(true);
-      navigate("/dashboard", { replace: true });
-      toast.success("Logged in successfully");
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Invalid credentials");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegistration = async (email, phone, organization, password) => {
-    const body = { email, phone, organization, password };
-    setLoading(true);
-    try {
-      const response = await axios.post(`${baseurl}/api/auth/register`, body);
-      toast.success('Registered Successfully');
-      setEmail('');
-      setPhone('');
-      setOrganization('');
-      setPassword('');
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Registration Failed');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
+    dispatch(logout());
     navigate("/login", { replace: true });
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+    } else {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <>
@@ -94,9 +49,9 @@ function App() {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <ToastContainer />
-          {!isLoggedIn ? (
+          {!isAuthenticated ? (
             <>
-              <Login handleLogin={handleLogin} handleRegistration={handleRegistration} />
+              <Login />
               {loading && (
                 <div className="loader-container">
                   <Loader type="box-rectangular" bgColor={"#43ce9e"} color={'#FFFFFF'} title={"Loading"} size={100} />
@@ -110,10 +65,10 @@ function App() {
                 <Topbar setIsSidebar={setIsSidebar} handleLogout={handleLogout} />
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/team" element={<Team />} />
+                  <Route path="/user" element={<Team />} />
                   <Route path="/contacts" element={<Contacts />} />
                   <Route path="/invoices" element={<Invoices />} />
-                  <Route path="/form" element={<Form />} />
+                  <Route path="/scheme-form" element={<Form />} />
                   <Route path="/bar" element={<Bar />} />
                   <Route path="/pie" element={<Pie />} />
                   <Route path="/line" element={<Line />} />
@@ -129,4 +84,5 @@ function App() {
     </>
   );
 }
+
 export default App;

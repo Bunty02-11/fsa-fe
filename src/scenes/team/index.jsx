@@ -1,19 +1,20 @@
-import { Box, Typography, useTheme,Button } from "@mui/material";
+import { Box, Typography, useTheme, Button } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
-// import { mockDataTeam } from "../../data/mockData";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
-import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import Header from "../../components/Header";
-import { useState, useEffect } from "react";
-import { ToastContainer, toast } from 'react-toastify';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUsers, deleteUser } from '../../actions/userAction';
+import { useEffect } from "react";
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Team = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [user, setUser] = useState(null); // Properly initialize useState
+  const dispatch = useDispatch();
+  const { users, status } = useSelector((state) => state.user);
 
   const columns = [
     { field: "id", headerName: "ID" },
@@ -38,7 +39,6 @@ const Team = () => {
       headerName: "Access Level",
       flex: 1,
       renderCell: ({ row: { role } }) => {
-        // console.log(role)
         return (
           <Box
             width="60%"
@@ -47,7 +47,7 @@ const Team = () => {
             display="flex"
             justifyContent="center"
             backgroundColor={
-              role === "role"
+              role === "admin"
                 ? colors.greenAccent[600]
                 : role === "user"
                 ? colors.greenAccent[700]
@@ -69,76 +69,30 @@ const Team = () => {
       headerName: "Actions",
       width: 150, // Adjusted width to accommodate two buttons
       renderCell: (params) => (
-        // console.log(params)
-        <>
-          <Button
-            variant="contained"
-            size="small"
-            color="error"
-            onClick={() => handleDelete(params.row.id)}
-          >
-            Delete
-          </Button>
-        </>
+        <Button
+          variant="contained"
+          size="small"
+          color="error"
+          onClick={() => handleDelete(params.row.id)}
+        >
+          Delete
+        </Button>
       ),
     },
   ];
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     const confirmed = window.confirm("Are you sure you want to delete this user?");
     if (confirmed) {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`https://4003ig8kvg.execute-api.ap-south-1.amazonaws.com/production/api/auth/user/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete user');
-        }
-
-        const updatedusers = user.filter((user) => user.id !== id);
-        setUser(updatedusers);
-        toast.success('user deleted successfully');
-      } catch (error) {
-        console.error('Error deleting user:', error.message);
-        toast.error('Failed to delete user');
-      }
+      dispatch(deleteUser(id));
     }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('https://4003ig8kvg.execute-api.ap-south-1.amazonaws.com/production/api/auth/user', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-
-        const data = await response.json();
-        console.log(data);
-        setUser(data.data); // Ensure that the user data is set properly
-
-        // Here you can set the fetched data to your state or do further processing
-      } catch (error) {
-        console.error(error.message);
-        // Show error message using toast
-      }
-    };
-
-    fetchData();
-  }, []); // Fetch data only once when the component mounts
+    if (status === 'idle') {
+      dispatch(fetchUsers());
+    }
+  }, [status, dispatch]);
 
   return (
     <Box m="20px">
@@ -172,9 +126,9 @@ const Team = () => {
           },
         }}
       >
-      {/* {  console.log(user)} */}
-      <DataGrid checkboxSelection rows={user ? user : []} columns={columns} />
+        <DataGrid checkboxSelection rows={users ? users : []} columns={columns} />
       </Box>
+      <ToastContainer />
     </Box>
   );
 };
