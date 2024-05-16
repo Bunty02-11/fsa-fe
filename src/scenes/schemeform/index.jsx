@@ -1,5 +1,3 @@
-// src/components/SchemeForm.js
-
 import React, { useEffect } from 'react';
 import { Box, Button, TextField, useTheme } from "@mui/material";
 import { Formik } from "formik";
@@ -44,22 +42,22 @@ const SchemeForm = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "ID" },
+    { field: 'id', headerName: 'ID', hide: isMobile },
     {
-      field: "schemeName",
-      headerName: "Scheme Name",
-      flex: 1,
-      cellClassName: "name-column--cell",
+      field: 'schemeName',
+      headerName: 'Scheme Name',
+      flex: isMobile ? 1 : 1,
+      cellClassName: 'name-column--cell',
     },
     {
-      field: "schemeType",
-      headerName: "Scheme Type",
-      flex: 1,
+      field: 'schemeType',
+      headerName: 'Scheme Type',
+      flex: isMobile ? 1 : 2,
     },
     {
-      field: "actions",
-      headerName: "Actions",
-      width: 150,
+      field: 'actions',
+      headerName: 'Actions',
+      width: isMobile ? 100 : 150,
       renderCell: (params) => (
         <>
           <Button
@@ -85,7 +83,7 @@ const SchemeForm = () => {
   ];
 
   return (
-    <Box m={isMobile ? "10px" : "20px"}>
+    <Box m={isMobile ? "20px" : "20px"}>
       <Header title="CREATE SCHEME" subtitle="Create a New Scheme" />
       <ToastContainer position="bottom-right" autoClose={5000} />
       <Formik
@@ -110,9 +108,7 @@ const SchemeForm = () => {
             <Box
               display="grid"
               gap="30px"
-              gridTemplateColumns={
-                isMobile ? "repeat(4, minmax(0, 1fr))" : "1fr"
-              }
+              gridTemplateColumns="1fr"
             >
               <TextField
                 fullWidth
@@ -153,39 +149,39 @@ const SchemeForm = () => {
         )}
       </Formik>
       <Box m="20px">
-        <Header title="SCHEMES" subtitle="List of Schemes" />
-        <Box
-          m="40px 0 0 0"
-          height="45vh"
-          sx={{
-            "& .MuiDataGrid-root": {
-              border: "none",
-            },
-            "& .MuiDataGrid-cell": {
-              borderBottom: "none",
-            },
-            "& .name-column--cell": {
-              color: colors.greenAccent[300],
-            },
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: colors.blueAccent[700],
-              borderBottom: "none",
-            },
-            "& .MuiDataGrid-virtualScroller": {
-              backgroundColor: colors.primary[400],
-            },
-            "& .MuiDataGrid-footerContainer": {
-              borderTop: "none",
-              backgroundColor: colors.blueAccent[700],
-            },
-            "& .MuiCheckbox-root": {
-              color: `${colors.greenAccent[200]} !important`,
-            },
-          }}
-        >
-          <DataGrid checkboxSelection rows={schemes || []} columns={columns} />
-        </Box>
+      <Header title="SCHEMES" subtitle="List of Schemes" />
+      <Box
+        m="40px 0 0 0"
+        height={isMobile ? '70vh' : '45vh'}
+        sx={{
+          '& .MuiDataGrid-root': {
+            border: 'none',
+          },
+          '& .MuiDataGrid-cell': {
+            borderBottom: 'none',
+          },
+          '& .name-column--cell': {
+            color: colors.greenAccent[300],
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: colors.blueAccent[700],
+            borderBottom: 'none',
+          },
+          '& .MuiDataGrid-virtualScroller': {
+            backgroundColor: colors.primary[400],
+          },
+          '& .MuiDataGrid-footerContainer': {
+            borderTop: 'none',
+            backgroundColor: colors.blueAccent[700],
+          },
+          '& .MuiCheckbox-root': {
+            color: `${colors.greenAccent[200]} !important`,
+          },
+        }}
+      >
+        <DataGrid checkboxSelection rows={schemes || []} columns={columns} />
       </Box>
+    </Box>
     </Box>
   );
 };
